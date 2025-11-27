@@ -1,0 +1,32 @@
+services:
+    rabbit:
+        image: rabbitmq:3-management
+        environment:
+            - RABBITMQ_DEFAULT_USER=docker
+            - RABBITMQ_DEFAULT_PASS=docker
+        ports:
+            - '5672:5672'
+            - '15672:15672'
+
+    mongo:
+        image: mongo:6
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=docker
+            - MONGO_INITDB_ROOT_PASSWORD=docker
+            - MONGO_INITDB_DATABASE=fetch_weather
+        ports:
+            - '27017:27017'
+
+    python_worker:
+        build: ./python_worker
+        env_file:
+            - .env
+        environment:
+            RABBITMQ_URL: amqp://docker:docker@rabbit:5672
+        depends_on:
+            - rabbit
+
+    json_server:
+        build: ./fake_api
+        ports:
+            - '3000:3000'
