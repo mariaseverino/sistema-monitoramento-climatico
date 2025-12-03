@@ -30,3 +30,12 @@ services:
         build: ./fake_api
         ports:
             - '3000:3000'
+
+    go_worker:
+        build: ./go_worker
+        env_file:
+            - .env
+        environment:
+            RABBITMQ_URL: amqp://docker:docker@rabbit:5672
+        depends_on:
+            - rabbit

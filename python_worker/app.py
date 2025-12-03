@@ -44,7 +44,6 @@ def fetch_weather(user, channel):
 
         payload = {
             "user": user,
-            "coord": data["coord"],
             "weather": {
                 "description": data["weather"][0]["description"],
                 "temp": data["main"]["temp"],

@@ -1,7 +1,8 @@
 {
-    "usuarios": [
+    "users": [
         { "id": 1, "latitude": -22.1175, "longitude": -45.0517 },
         { "id": 2, "latitude": -22.1006, "longitude": -43.8596 },
         { "id": 3, "latitude": -23.5489, "longitude": -46.6388 }
-    ]
+    ],
+    "weather": []
 }
