@@ -24,8 +24,13 @@ def connect_with_retry(params, retries=10):
 
 def fetch_users_locations():
     try:
-        response = httpx.get(API_URL, timeout=10)
+        print(API_URL)
+        response = httpx.get(API_URL, timeout=100)
         users = response.json()
+
+        if not users:
+            print("Nenhum usuário encontrado ou erro na API.")
+            return []
 
         return users
 
@@ -35,22 +40,22 @@ def fetch_users_locations():
 def fetch_weather(user, channel):
     url = (
         f"http://api.openweathermap.org/data/2.5/weather"
-        f"?lat={user['latitude']}&lon={user['longitude']}&lang=pt_br&appid={KEY}"
+        f"?lat={user['coord']['lat']}&lon={user['coord']['lon']}&lang=pt_br&appid={KEY}"
     )
 
     try:
-        response = httpx.get(url, timeout=10)
+        response = httpx.get(url, timeout=100)
         data = response.json()
 
         payload = {
-            "user": user,
-            "weather": {
-                "description": data["weather"][0]["description"],
-                "temp": data["main"]["temp"],
-                "humidity": data["main"]["humidity"],
-                "wind_speed": data["wind"]["speed"],
-                "icon": data["weather"][0]["icon"],
-            },
+            "userId": user['_id'],
+            "lat": user['coord']['lat'],
+            "lon": user['coord']['lon'],
+            "description": data["weather"][0]["description"],
+            "temp": (data["main"]["temp"] - 273.15),
+            "humidity": data["main"]["humidity"],
+            "windSpeed": data["wind"]["speed"],
+            "icon": data["weather"][0]["icon"],
         }
 
         body = json.dumps(payload)

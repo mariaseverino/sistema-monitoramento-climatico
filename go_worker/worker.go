@@ -13,23 +13,15 @@ import (
 	"net/http"
 )
 
-type User struct {
-	Id    		string `json:"id"`
-	Latitude    float32 `json:"latitude"`
-	Longitude   float32 `json:"longitude"`
-}
-
-type Weather struct {
-	Description   string `json:"description"`
+type Payload struct {
+    UserId        string  `json:"userId"`
+	Lat           float32 `json:"lat"`
+	Lon           float32 `json:"lon"`
+	Description   string  `json:"description"`
 	Temp    	  float32 `json:"temp"`
 	Humidity      float32 `json:"humidity"`
-	WindSpeed     float32 `json:"wind_speed"`
-	Icon          string `json:"icon"`
-}
-
-type Payload struct {
-    User    User    `json:"user"`
-    Weather Weather `json:"weather"`
+	WindSpeed     float32 `json:"windSpeed"`
+	Icon          string  `json:"icon"`
 }
 
 func connectRabbit() *amqp.Connection {
@@ -40,21 +32,26 @@ func connectRabbit() *amqp.Connection {
 		if err == nil {
 			return conn
 		}
-		log.Printf("RabbitMQ não conectou, tentando novamente em 5s... (%v)\n", err)
+		// log.Printf("RabbitMQ não conectou, tentando novamente em 5s... (%v)\n", err)
 		time.Sleep(5)
 	}
 }
 
 func processMessage(body []byte) (bool, error){
 	api := os.Getenv("API_URL2")
-	url := api + "/weather"
+	url := api + "/weather/logs"
 
 	var data Payload
+
+	log.Println("BODY RECEBIDO DO RABBITMQ:", string(body))
+
+
 
 	err := json.Unmarshal(body, &data)
 
 	if err != nil {
-		log.Printf("JSON inválido: %v", err)
+		log.Println("BODY:", string(body))
+		// log.Printf("JSON inválido: %v", err)
 		return false, err
 	}
 

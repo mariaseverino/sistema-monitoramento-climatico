@@ -25,6 +25,7 @@ services:
             RABBITMQ_URL: amqp://docker:docker@rabbit:5672
         depends_on:
             - rabbit
+            - nest_api
 
     json_server:
         build: ./fake_api
@@ -39,3 +40,26 @@ services:
             RABBITMQ_URL: amqp://docker:docker@rabbit:5672
         depends_on:
             - rabbit
+
+    nest_api:
+        build: ./nest_api
+        env_file:
+            - .env
+        depends_on:
+            - mongo
+        ports:
+            - '3003:3003'
+
+    ollama:
+        image: ollama/ollama:latest
+        ports:
+            - '11434:11434'
+        volumes:
+            - ./ollama:/root/.ollama
+        entrypoint: >
+            sh -c "
+                ollama serve &
+                sleep 2 &&
+                ollama pull llama3 &&
+                wait
+            "
