@@ -1,12 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
-export type UserDocument = HydratedDocument<Weather>;
+export type WeatherDocument = HydratedDocument<Weather>;
 
 @Schema()
 export class Weather {
     @Prop({ required: true })
     userId: string;
+
+    @Prop({ required: true })
+    time: Date;
 
     @Prop({ required: true })
     lat: number;

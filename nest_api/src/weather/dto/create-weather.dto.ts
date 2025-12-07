@@ -1,5 +1,6 @@
 export interface SaveWeatherLogsDto {
     userId: string;
+    time: string;
     lat: number;
     lon: number;
     description: string;

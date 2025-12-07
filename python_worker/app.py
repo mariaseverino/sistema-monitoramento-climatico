@@ -4,8 +4,12 @@ import pika
 import json
 import time
 from apscheduler.schedulers.blocking import BlockingScheduler
+import datetime
+import pytz
 
-KEY = os.getenv("KEY")
+tz_sp = pytz.timezone("America/Sao_Paulo")
+
+KEY_OPEN_WEATHER = os.getenv("KEY_OPEN_WEATHER")
 RABBITMQ_URL = os.getenv("RABBITMQ_URL")
 API_URL = os.getenv("API_URL")
 
@@ -22,37 +26,40 @@ def connect_with_retry(params, retries=10):
     raise Exception("Não conseguiu conectar ao RabbitMQ depois de várias tentativas.")
 
 
-def fetch_users_locations():
-    try:
-        print(API_URL)
-        response = httpx.get(API_URL, timeout=100)
-        users = response.json()
+def fetch_users_locations(retries=10):
+    users_url = f"{API_URL.rstrip('/')}/users"
 
-        if not users:
-            print("Nenhum usuário encontrado ou erro na API.")
-            return []
+    for _ in range(retries):
+        try:
+            response = httpx.get(users_url, timeout=1000)
+            users = response.json()
+            return users
+        except Exception as e:
+            print("Erro:", e)
+            time.sleep(5)
 
-        return users
+    raise Exception("Não conseguiu conectar ao back")
 
-    except Exception as e:
-        print("Erro:", e)
 
 def fetch_weather(user, channel):
     url = (
         f"http://api.openweathermap.org/data/2.5/weather"
-        f"?lat={user['coord']['lat']}&lon={user['coord']['lon']}&lang=pt_br&appid={KEY}"
+        f"?lat={user['coord']['lat']}&lon={user['coord']['lon']}&lang=pt_br&appid={KEY_OPEN_WEATHER}"
     )
 
     try:
         response = httpx.get(url, timeout=100)
         data = response.json()
 
+        timeNow = datetime.datetime.now(tz_sp)
+
         payload = {
             "userId": user['_id'],
+            "time": timeNow.isoformat(),
             "lat": user['coord']['lat'],
             "lon": user['coord']['lon'],
             "description": data["weather"][0]["description"],
-            "temp": (data["main"]["temp"] - 273.15),
+            "temp": data["main"]["temp"],
             "humidity": data["main"]["humidity"],
             "windSpeed": data["wind"]["speed"],
             "icon": data["weather"][0]["icon"],

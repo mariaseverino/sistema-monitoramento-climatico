@@ -27,10 +27,10 @@ services:
             - rabbit
             - nest_api
 
-    json_server:
-        build: ./fake_api
-        ports:
-            - '3000:3000'
+    # json_server:
+    #     build: ./fake_api
+    #     ports:
+    #         - '3000:3000'
 
     go_worker:
         build: ./go_worker
@@ -40,6 +40,7 @@ services:
             RABBITMQ_URL: amqp://docker:docker@rabbit:5672
         depends_on:
             - rabbit
+            - python_worker
 
     nest_api:
         build: ./nest_api
@@ -47,19 +48,30 @@ services:
             - .env
         depends_on:
             - mongo
+            # - ollama
         ports:
             - '3003:3003'
 
-    ollama:
-        image: ollama/ollama:latest
+    front:
+        build: ./front
+        env_file:
+            - .env
+        depends_on:
+            - nest_api
+            # - ollama
         ports:
-            - '11434:11434'
-        volumes:
-            - ./ollama:/root/.ollama
-        entrypoint: >
-            sh -c "
-                ollama serve &
-                sleep 2 &&
-                ollama pull llama3 &&
-                wait
-            "
+            - '3000:3000'
+
+    # ollama:
+    #     image: ollama/ollama:latest
+    #     ports:
+    #         - '11434:11434'
+    #     volumes:
+    #         - ./ollama:/root/.ollama
+    #     entrypoint: >
+    #         sh -c "
+    #             ollama serve &
+    #             sleep 2 &&
+    #             ollama pull llama3.2:3b &&
+    #             wait
+    #         "

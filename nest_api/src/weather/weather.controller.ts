@@ -7,48 +7,70 @@ import {
     Delete,
     Res,
     BadRequestException,
+    UseGuards,
 } from '@nestjs/common';
 import { WeatherService } from './weather.service';
 import type { SaveWeatherLogsDto } from './dto/create-weather.dto';
-import { generateWeatherInsights } from 'lib/ollama';
 import { stringify } from 'csv-stringify';
 import { pipeline } from 'stream/promises';
 import type { Response } from 'express';
 import * as ExcelJS from 'exceljs';
+import { InsightService } from 'src/insight/insight.service';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('weather/logs')
 export class WeatherController {
-    constructor(private readonly weatherService: WeatherService) {}
+    constructor(
+        private readonly weatherService: WeatherService,
+        private readonly insightService: InsightService,
+    ) {}
 
     @Post()
-    saveLogs(@Body() saveWeatherLogsDto: SaveWeatherLogsDto) {
+    async saveLogs(
+        @Body() saveWeatherLogsDto: SaveWeatherLogsDto,
+        @Res() resposne: Response,
+    ) {
         try {
-            return this.weatherService.saveLog(saveWeatherLogsDto);
+            await this.weatherService.saveLog(saveWeatherLogsDto);
+
+            const data = await this.weatherService.findLogsByUserId(
+                saveWeatherLogsDto.userId,
+            );
+
+            await this.insightService.removeInsightsById(
+                saveWeatherLogsDto.userId,
+            );
+
+            await this.insightService.generateWeatherInsights(
+                saveWeatherLogsDto.userId,
+                data,
+            );
+
+            return resposne.send();
         } catch (error) {
-            new BadRequestException('nao edu pra salvar');
+            throw new BadRequestException();
         }
     }
 
+    @UseGuards(AuthGuard)
     @Get(':userId')
     getLogs(@Param('userId') id: string) {
         return this.weatherService.findLogsByUserId(id);
     }
 
+    @UseGuards(AuthGuard)
     @Delete(':userId')
     remove(@Param('userId') id: string) {
         return this.weatherService.removeLogsByUserId(id);
     }
 
+    @UseGuards(AuthGuard)
     @Get('insights/:userId')
     async getIAInsights(@Param('userId') id: string) {
-        const data = await this.weatherService.findLogsByUserId(id);
-        const insights = await generateWeatherInsights(data);
-        // console.log(data);
-        console.log(insights);
-
-        return { mesage: 'oi' };
+        return await this.insightService.findInsightsByUserId(id);
     }
 
+    @UseGuards(AuthGuard)
     @Get('export/csv/:userId')
     async getCsLogs(@Param('userId') id: string, @Res() response: Response) {
         const logs = await this.weatherService.findLogsByUserId(id);
@@ -79,6 +101,7 @@ export class WeatherController {
         response.send();
     }
 
+    @UseGuards(AuthGuard)
     @Get('export/xlsx/:userId')
     async getExcelogs(@Param('userId') id: string, @Res() response: Response) {
         const logs = await this.weatherService.findLogsByUserId(id);

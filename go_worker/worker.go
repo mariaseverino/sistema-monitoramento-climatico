@@ -14,14 +14,15 @@ import (
 )
 
 type Payload struct {
-    UserId        string  `json:"userId"`
-	Lat           float32 `json:"lat"`
-	Lon           float32 `json:"lon"`
-	Description   string  `json:"description"`
-	Temp    	  float32 `json:"temp"`
-	Humidity      float32 `json:"humidity"`
-	WindSpeed     float32 `json:"windSpeed"`
-	Icon          string  `json:"icon"`
+    UserId        string     `json:"userId"`
+    Time          time.Time  `json:"time"`
+	Lat           float32    `json:"lat"`
+	Lon           float32    `json:"lon"`
+	Description   string     `json:"description"`
+	Temp    	  float32    `json:"temp"`
+	Humidity      float32    `json:"humidity"`
+	WindSpeed     float32    `json:"windSpeed"`
+	Icon          string     `json:"icon"`
 }
 
 func connectRabbit() *amqp.Connection {
@@ -38,7 +39,7 @@ func connectRabbit() *amqp.Connection {
 }
 
 func processMessage(body []byte) (bool, error){
-	api := os.Getenv("API_URL2")
+	api := os.Getenv("API_URL")
 	url := api + "/weather/logs"
 
 	var data Payload

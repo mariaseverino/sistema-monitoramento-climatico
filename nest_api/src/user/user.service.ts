@@ -21,15 +21,15 @@ export class UserService {
         return await this.user.findOne({ email }).select('+password').exec();
     }
 
-    async findOne(id: string) {
-        return await this.user.findOne({ id }).exec();
+    async findOne(_id: string) {
+        return await this.user.findOne({ _id }).exec();
     }
 
-    async update(id: string, updateUserDto: UpdateUserDto) {
-        return this.user.updateOne({ id }, updateUserDto);
+    async update(_id: string, updateUserDto: UpdateUserDto) {
+        return this.user.findByIdAndUpdate(_id, updateUserDto, { new: true });
     }
 
-    async remove(id: string) {
-        await this.user.deleteOne({ id }).exec();
+    async remove(_id: string) {
+        await this.user.deleteOne({ _id }).exec();
     }
 }

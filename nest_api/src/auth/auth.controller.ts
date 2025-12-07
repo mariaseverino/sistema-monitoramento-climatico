@@ -8,7 +8,7 @@ import {
     HttpCode,
     Res,
     UseGuards,
-    Request,
+    Req,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -84,29 +84,29 @@ export class AuthController {
 
         const accessToken = await this.jwtService.signAsync(payload, {
             expiresIn: '1h',
+            secret: process.env.JWT_SECRET,
         });
 
         const refreshToken = await this.jwtService.signAsync(payload, {
             expiresIn: '7d',
+            secret: process.env.JWT_SECRET,
         });
 
         response.cookie('access_token', accessToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'strict',
+            sameSite: 'lax',
             maxAge: 60 * 60 * 1000,
         });
 
         response.cookie('refresh_token', refreshToken, {
             httpOnly: true,
-            sameSite: 'strict',
+            sameSite: 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         return { message: 'Logged in' };
     }
 
-    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
     @Post('logout')
     async logout(@Res() response: Response) {
@@ -118,7 +118,7 @@ export class AuthController {
 
     @UseGuards(AuthGuard)
     @Get('me')
-    getProfile(@Request() request) {
+    getProfile(@Req() request) {
         return request.user;
     }
 }

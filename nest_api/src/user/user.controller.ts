@@ -1,7 +1,6 @@
 import {
     Controller,
     Get,
-    Post,
     Body,
     Patch,
     Param,
@@ -21,6 +20,7 @@ export class UserController {
     async findAll() {
         return await this.userService.findAll();
     }
+
     @UseGuards(AuthGuard)
     @Patch(':id')
     async update(
@@ -30,7 +30,9 @@ export class UserController {
         const userExists = await this.userService.findOne(id);
 
         if (!userExists) {
-            new BadRequestException('Esse usuario nao costa no bando de dados');
+            throw new BadRequestException(
+                'Esse usuário não consta no banco de dados',
+            );
         }
         return await this.userService.update(id, updateUserDto);
     }
